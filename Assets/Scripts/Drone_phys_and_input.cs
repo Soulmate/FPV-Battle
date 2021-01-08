@@ -32,7 +32,7 @@ public class Drone_phys_and_input : MonoBehaviour
 
 
     void Start()
-    {        
+    {
         //drone_cam_transform = GameObject.Find("Drone Camera").transform; //TODO использовать угол камеры, а не сам объект
         my_phys_turn_off_time = Time.time;
 
@@ -63,7 +63,7 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void Update()
     {
-        
+
         if (Input.GetKeyDown(KeyCode.R))
             ResetDrone();
 
@@ -77,24 +77,26 @@ public class Drone_phys_and_input : MonoBehaviour
         float yaw = InputReader.yaw;
         float pit = InputReader.pitch;
         float rol = InputReader.roll;
+        bool arm = InputReader.arm;
 
 
         if (!fight_started)
-        {   
+        {
             return;
         }
 
 
         //audio:
-        audioSource.pitch = (thr+1) * 0.5f * 0.5f + 0.5f;
+        audioSource.pitch = (thr + 1) * 0.5f * 0.5f + 0.5f;
         audioSource.volume = (thr + 1) * 0.5f * 0.8f + 0.2f;
-        
+
 
         // управление ориентацией дрона
-        transform.Rotate(new Vector3(
-            bfcalc(pit, rcRate, expo, superRate) * Time.deltaTime,
-            bfcalc(yaw, rcRate, expo, superRate) * Time.deltaTime,
-            bfcalc(-rol, rcRate, expo, superRate) * Time.deltaTime));
+        if (arm)
+            transform.Rotate(new Vector3(
+                bfcalc(pit, rcRate, expo, superRate) * Time.deltaTime,
+                bfcalc(yaw, rcRate, expo, superRate) * Time.deltaTime,
+                bfcalc(-rol, rcRate, expo, superRate) * Time.deltaTime));
 
         //моя физика:
         if (!my_phys_turn_off_time.HasValue ||
@@ -103,7 +105,11 @@ public class Drone_phys_and_input : MonoBehaviour
             float force = (thr + 1f) / 2f * drone_power;
 
             Vector3 acc_gravity = new Vector3(0, -phys_gravity_g, 0);
-            Vector3 acc_throtle = transform.up * force;
+            Vector3 acc_throtle;
+            if (arm)
+                acc_throtle = transform.up * force;
+            else
+                acc_throtle = Vector3.zero;
             Vector3 acc_drag = -speed * phys_drag_coeff;
             accsel = acc_gravity + acc_throtle + acc_drag;
 
@@ -128,14 +134,14 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        
+
         Turn_off_my_phys(); //выключить мою физику на время
 
-        
+
         foreach (ContactPoint contact in collision.contacts)
         {
             Debug.DrawRay(contact.point, contact.normal, Color.white);
-        }        
+        }
         /*if (collision.relativeVelocity.magnitude > 2)
         {            
             print("БАМ");//audioSource.Play();
@@ -145,7 +151,7 @@ public class Drone_phys_and_input : MonoBehaviour
         //ResetDrone();*/
     }
 
-    
+
     void Turn_off_my_phys()        //выключить мою физику временно
     {
         speed = Vector3.zero;

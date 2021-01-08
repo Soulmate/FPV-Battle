@@ -7,11 +7,11 @@ using System.Linq;
 
 public class InputReader : MonoBehaviour
 {
-    const int axes_count = 16;
-    const int inputs_count = 7;
-   
+    //надо в инпут менеджере все эти оси забить, названия ax1, ax2 и т.д.
+    //первые 8 - оси с джойстика по порядку, следующие 8 - кнопки джойстика
+    const int axes_count = 16; 
 
-public static float[] joy_axes = new float[axes_count];
+    public static float[] joy_axes = new float[axes_count];
 
     static Transform canvas_transform;
     static GameObject[] uiSlider_arr = new GameObject[axes_count];
@@ -29,7 +29,7 @@ public static float[] joy_axes = new float[axes_count];
     class InputMappingEntry
     {
         public string name;
-        public int axis_num;
+        public int? axis_num;
         public bool inverted = false;
     }
     static InputMappingEntry[] mappingArray = new InputMappingEntry[]
@@ -38,9 +38,21 @@ public static float[] joy_axes = new float[axes_count];
         new InputMappingEntry(){ axis_num = 1, name  = "Yaw",  },
         new InputMappingEntry(){ axis_num = 2, name  = "Pitch",  },
         new InputMappingEntry(){ axis_num = 3, name  = "Roll",  },
-        new InputMappingEntry(){ axis_num = 7, name  = "Arm",  },
-        new InputMappingEntry(){ axis_num = 8, name  = "Fire",  }
+        new InputMappingEntry(){ axis_num = 10, name  = "Arm",  },
+        new InputMappingEntry(){ axis_num = 11, name  = "Fire", },
     };
+
+    static bool showingControls = true;
+    static void ShowControls()
+    {
+        canvas_transform.gameObject.SetActive(true);
+        showingControls = true;
+    }
+    static void HideControls()
+    {
+        canvas_transform.gameObject.SetActive(false);
+        showingControls = false;
+    }
 
 
     private void Start()
@@ -61,29 +73,29 @@ public static float[] joy_axes = new float[axes_count];
         for (int i = 0; i < axes_count; i++)
         {
             uiSlider_arr[i] = DefaultControls.CreateSlider(uiResources);
-            uiSlider_arr[i].transform.SetParent(canvas_transform, false);            
+            uiSlider_arr[i].transform.SetParent(canvas_transform, false);
             uiSlider_arr[i].GetComponent<Slider>().minValue = -1;
             uiSlider_arr[i].GetComponent<Slider>().maxValue = 1;
             uiSlider_arr[i].transform.position = new Vector3(100, 1200 - i * 70, 0);
 
             uiToggle_arr[i] = DefaultControls.CreateToggle(uiResources);
-            
+
             uiToggle_arr[i].transform.SetParent(canvas_transform, false);
-            uiToggle_arr[i].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert"; 
+            uiToggle_arr[i].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert";
             uiToggle_arr[i].GetComponent<Toggle>().isOn = false; //TODO read
-            uiToggle_arr[i].transform.position = new Vector3(400, 1200 - i * 70, 0);
+            uiToggle_arr[i].transform.position = new Vector3(300, 1200 - i * 70, 0);
 
             uiDropdown_arr[i] = DefaultControls.CreateDropdown(uiResources);
             uiDropdown_arr[i].transform.SetParent(canvas_transform, false);
-            uiDropdown_arr[i].GetComponent <Dropdown>().ClearOptions();                      
-            foreach (Dropdown.OptionData message in m_Messages) 
+            uiDropdown_arr[i].GetComponent<Dropdown>().ClearOptions();
+            foreach (Dropdown.OptionData message in m_Messages)
                 uiDropdown_arr[i].GetComponent<Dropdown>().options.Add(message);
             var me = mappingArray.FirstOrDefault((t) => t.axis_num == i); //ищем на что забита эта ось
             if (EqualityComparer<InputMappingEntry>.Default.Equals(me, default(InputMappingEntry))) //если не нашелся элемент
                 uiDropdown_arr[i].GetComponent<Dropdown>().value = 0;
             else
-                uiDropdown_arr[i].GetComponent<Dropdown>().value = me.axis_num + 1;
-            uiDropdown_arr[i].transform.position = new Vector3(500, 1200 - i * 70, 0);
+                uiDropdown_arr[i].GetComponent<Dropdown>().value = me.axis_num.Value + 1;
+            uiDropdown_arr[i].transform.position = new Vector3(400, 1200 - i * 70, 0);
         }
         //print(uiSlider.transform.position);
     }
@@ -96,8 +108,14 @@ public static float[] joy_axes = new float[axes_count];
     {
         for (int i = 0; i < axes_count; i++)
         {
-            uiSlider_arr[i].GetComponent<Slider>().value = joy_axes[i];            
+            uiSlider_arr[i].GetComponent<Slider>().value = joy_axes[i];
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+            if (showingControls)
+                HideControls();
+            else
+                ShowControls();
     }
 
     private static void UpdateAxes()
@@ -107,12 +125,18 @@ public static float[] joy_axes = new float[axes_count];
             joy_axes[i] = Input.GetAxis($"ax{i + 1}");
         }
 
-        throttle = joy_axes[mappingArray[0].axis_num];
-        yaw = joy_axes[mappingArray[1].axis_num];
-        pitch = joy_axes[mappingArray[2].axis_num];
-        roll = joy_axes[mappingArray[3].axis_num];
-        arm = joy_axes[mappingArray[4].axis_num] > 0.1; //TODO константу
-        fire = joy_axes[mappingArray[5].axis_num] > 0.1;
+        throttle = joy_axes[mappingArray[0].axis_num.Value];
+        yaw = joy_axes[mappingArray[1].axis_num.Value];
+        pitch = joy_axes[mappingArray[2].axis_num.Value];
+        roll = joy_axes[mappingArray[3].axis_num.Value];
+        if (mappingArray[4].axis_num.HasValue)
+            arm = joy_axes[mappingArray[4].axis_num.Value] > 0.1; //TODO константу
+        else
+            arm = true;
+        if (mappingArray[5].axis_num.HasValue)
+            fire = joy_axes[mappingArray[5].axis_num.Value] > 0.1;
+        else
+            fire = false;
         if (mappingArray[0].inverted) throttle = -throttle;
         if (mappingArray[1].inverted) yaw = -yaw;
         if (mappingArray[2].inverted) pitch = -pitch;
