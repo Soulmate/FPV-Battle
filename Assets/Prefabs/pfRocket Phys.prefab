@@ -5167,9 +5167,9 @@ GameObject:
   - component: {fileID: 1907693392588628364}
   - component: {fileID: 8556642335708240381}
   - component: {fileID: 7951623293348770113}
-  - component: {fileID: -9046217409203774819}
+  - component: {fileID: 69336387017512732}
   m_Layer: 0
-  m_Name: pfRocket
+  m_Name: pfRocket Phys
   m_TagString: Rocket
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5221,7 +5221,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-9046217409203774819
+--- !u!114 &69336387017512732
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5230,7 +5230,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7989145830908479782}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0110c64e56949fe42a50c45702909d78, type: 3}
+  m_Script: {fileID: 11500000, guid: 9838697d9d6c817468e0a7d3288dff09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   engine_tol: 3

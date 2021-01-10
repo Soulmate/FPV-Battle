@@ -1038,6 +1038,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 592774446}
+  - component: {fileID: 592774447}
   m_Layer: 0
   m_Name: Weapons
   m_TagString: Untagged
@@ -1062,6 +1063,18 @@ Transform:
   m_Father: {fileID: 766654370}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &592774447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 592774445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1846006c9ccad749a3509fdc9501a31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &698153793 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
@@ -1573,6 +1586,10 @@ PrefabInstance:
       value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
+      propertyPath: shootPerSecond
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: targeting_speed
       value: 0.01
       objectReference: {fileID: 0}
@@ -1648,6 +1665,10 @@ PrefabInstance:
     - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: cruiseSpeed
       value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
+      propertyPath: shootPerSecond
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: targeting_speed
@@ -3664,21 +3685,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: pfWeapon
       objectReference: {fileID: 0}
+    - target: {fileID: 6668777420467596160, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: m_RootOrder
       value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.22381902
-      objectReference: {fileID: 0}
-    - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.22381902
-      objectReference: {fileID: 0}
-    - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.22381902
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3686,11 +3699,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.36082
+      value: -0.361
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.097721
+      value: 0.621
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3863,6 +3876,10 @@ PrefabInstance:
     - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: cruiseSpeed
       value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
+      propertyPath: shootPerSecond
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: targeting_speed

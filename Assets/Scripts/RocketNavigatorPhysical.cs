@@ -4,7 +4,7 @@ using UnityEngine;
 
 using System.Linq;
 
-public class RocketNavigator : MonoBehaviour
+public class RocketNavigatorPhysical : MonoBehaviour
 {
     public float engine_tol = 3;
     public float tol = 10;
@@ -39,7 +39,7 @@ public class RocketNavigator : MonoBehaviour
         if (targeting)
         {
             target = FindClosestTarget();
-            var heading = target.transform.position - transform.position;            
+            var heading = target.transform.position - transform.position;
             Debug.DrawLine(transform.position, target.transform.position, Color.black);
             transform.rotation = Quaternion.Slerp(transform.rotation,
                 Quaternion.LookRotation(heading, Vector3.up), targeting_speed);
@@ -64,12 +64,11 @@ public class RocketNavigator : MonoBehaviour
 
 
 
-    private void Kill() 
+    private void Kill()
     {
         ParticleSystem ps = GetComponentInChildren<ParticleSystem>();
         ps.Play();
         GetComponentInChildren<TrailRenderer>().enabled = false;
-        GetComponentInChildren<BoxCollider>().enabled = false;
         cruiseSpeed = 0; //остановить
         targeting_speed = 0; //не вращать
         transform.Find("Model").gameObject.SetActive(false);
@@ -77,12 +76,13 @@ public class RocketNavigator : MonoBehaviour
     }
 
     private void OutOfFuel()
-    {                
+    {
+        GetComponentInChildren<ParticleSystem>().Play();
         GetComponentInChildren<TrailRenderer>().enabled = false;
         Rigidbody rb = GetComponent<Rigidbody>();
         rb.useGravity = true;
         rb.velocity = speed * this.transform.forward;
-        rb.AddTorque(new Vector3(Random.Range(-100,100), Random.Range(-100, 100), Random.Range(-100, 100)));
+        rb.AddTorque(new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100)));
         engine_is_on = false;
         targeting = false;
     }
