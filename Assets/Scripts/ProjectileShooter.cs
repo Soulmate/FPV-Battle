@@ -27,20 +27,22 @@ public class ProjectileShooter : MonoBehaviour
     void Start()
     {
         OnShoot += ProjectileShooter_OnShoot;
-    }    
+    }
+
     public void Shoot()
     {
         if (!previousShotTime.HasValue || Time.time - previousShotTime.Value > 1 / shootPerSecond)
         {
+            previousShotTime = Time.time;
             OnShoot?.Invoke(
                 this,
                 new OnShootEventArgs() { gunEndPosition = transform.Find("Cube").position }
                 );
-            previousShotTime = Time.time;
+            
         }
     }
     private void ProjectileShooter_OnShoot(object sender, OnShootEventArgs e)
-    {        
+    {
         var bullet = Instantiate(pfBullet, e.gunEndPosition, Quaternion.identity);
         bullet.GetComponent<RocketNavigator>().acc = acc;
         bullet.GetComponent<RocketNavigator>().speed = initialSpeed;
