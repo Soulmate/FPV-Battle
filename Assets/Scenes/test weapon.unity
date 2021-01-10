@@ -337,9 +337,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83baba9505f703e49879e02229ffab8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movmentVector: {x: 0, y: 0, z: 0}
+  movmentVector: {x: 20, y: 0, z: 0}
   movmentFactor: 0
-  period: 1
+  period: 2.38
 --- !u!1 &1517891437
 GameObject:
   m_ObjectHideFlags: 0
@@ -350,6 +350,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1517891439}
   - component: {fileID: 1517891438}
+  - component: {fileID: 1517891440}
   m_Layer: 0
   m_Name: Autoshooter
   m_TagString: Untagged
@@ -384,6 +385,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1517891440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517891437}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83baba9505f703e49879e02229ffab8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movmentVector: {x: 10, y: 0, z: 10}
+  movmentFactor: 0
+  period: 3.97
 --- !u!1 &2010060623
 GameObject:
   m_ObjectHideFlags: 0
@@ -525,6 +541,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6668777420467596221, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 1158308406}
+    - target: {fileID: 6668777420467596222, guid: 502fbcfbe548b4f44b612117925ae546, type: 3}
+      propertyPath: throwOutSpeed
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

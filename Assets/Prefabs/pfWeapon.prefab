@@ -172,6 +172,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6668777420467596221}
   - component: {fileID: 6668777420467596222}
+  - component: {fileID: 2393039074506667872}
   m_Layer: 0
   m_Name: pfWeapon
   m_TagString: Untagged
@@ -208,11 +209,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pfBullet: {fileID: 1907693392588628364, guid: 6feeff46443ba2d47b89f20473777071, type: 3}
-  engine_tol: 2
-  tol: 3
-  acc: 3000
-  initialSpeed: 100
-  cruiseSpeed: 30
-  targeting: 1
-  targeting_speed: 0.1
-  shootPerSecond: 2
+  shootPerSecond: 1
+  target: {fileID: 0}
+  throwOutSpeed: 100
+  gunEndPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &2393039074506667872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6668777420467596160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa4dec9e92dc174886dc607023a13fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: {x: 0, y: 0, z: 0}

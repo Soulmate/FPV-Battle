@@ -4,29 +4,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ProjectileShooter : MonoBehaviour
-{
-    // Start is called before the first frame update
-    [SerializeField] Transform pfBullet;
-    [SerializeField] float engine_tol = 3; //сколько работает двигатель и таргетинг
-    [SerializeField] float tol = 10;//время жизни в секундах
-    [SerializeField] float acc = 3;
-    [SerializeField] float initialSpeed = 20;
-    [SerializeField] float cruiseSpeed = 30;
-    [SerializeField] bool targeting = true;
-    [SerializeField] float targeting_speed = 0.1f;
-
-    [SerializeField] float shootPerSecond = 2;
+{    
+    [SerializeField] Transform pfBullet;  
+    [SerializeField] float shootPerSecond = 2;    
+    public Transform target;
+    public float throwOutSpeed = 20;//скорость с короторой прожектайл выстреливается
+    public Vector3 gunEndPosition;
     float? previousShotTime = null;
+    Speedometer speedometer;
 
-    public event EventHandler<OnShootEventArgs> OnShoot;
+    public event EventHandler OnShoot;
     public class OnShootEventArgs : EventArgs
-    {
-        public int powerLevel = 1;
+    {        
         public Vector3 gunEndPosition;
+        public Transform projectile;        
     }
     void Start()
     {
-        OnShoot += ProjectileShooter_OnShoot;
+        gunEndPosition = transform.Find("Cube").localPosition;
+        speedometer = GetComponent<Speedometer>();
     }
 
     public void Shoot()
@@ -34,23 +30,13 @@ public class ProjectileShooter : MonoBehaviour
         if (!previousShotTime.HasValue || Time.time - previousShotTime.Value > 1 / shootPerSecond)
         {
             previousShotTime = Time.time;
-            OnShoot?.Invoke(
-                this,
-                new OnShootEventArgs() { gunEndPosition = transform.Find("Cube").position }
-                );
             
+            var projectile = Instantiate(pfBullet, transform.position + gunEndPosition, Quaternion.identity);
+            projectile.rotation = this.transform.rotation;
+            projectile.GetComponent<Rigidbody>().velocity = speedometer.speed + transform.forward * throwOutSpeed;
+            projectile.GetComponent<RocketNavigator>().target = target;
+            OnShoot?.Invoke(this, new OnShootEventArgs() { gunEndPosition = gunEndPosition, projectile = projectile });
         }
     }
-    private void ProjectileShooter_OnShoot(object sender, OnShootEventArgs e)
-    {
-        var bullet = Instantiate(pfBullet, e.gunEndPosition, Quaternion.identity);
-        bullet.GetComponent<RocketNavigator>().acc = acc;
-        bullet.GetComponent<RocketNavigator>().speed = initialSpeed;
-        bullet.GetComponent<RocketNavigator>().targeting_speed = targeting_speed;
-        bullet.GetComponent<RocketNavigator>().cruiseSpeed = cruiseSpeed;
-        bullet.GetComponent<RocketNavigator>().targeting = targeting;
-        bullet.GetComponent<RocketNavigator>().tol = tol;
-        bullet.GetComponent<RocketNavigator>().engine_tol = engine_tol;
-        bullet.rotation = this.transform.rotation;
-    }
+   
 }

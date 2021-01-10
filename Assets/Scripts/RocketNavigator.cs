@@ -8,43 +8,42 @@ public class RocketNavigator : MonoBehaviour
 {
     public float engine_tol = 3;
     public float tol = 10;
-    public float acc = 3; //ускорение как замедления так и торможения
-    public float cruiseSpeed = 20; //финальная скорость
-    public float speed = 10f; // текущий модуль скорости
-
-    public GameObject target;
-
-    public bool targeting = true;
+    public float thrust = 3; //ускорение как замедления так и торможения
     public float targeting_speed = 0.1f;
+    public float dragAfterDeath = 1;
+    public Transform target;
+
+
 
     private float timeOfStart;
     private bool engine_is_on = true;
+    Rigidbody rb;
 
 
     void Start()
     {
         timeOfStart = Time.time;
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
         if (engine_is_on)
-        {
-            speed = speed + Mathf.Sign(cruiseSpeed - speed) * acc * Time.deltaTime;
-            transform.position += transform.forward * speed * Time.deltaTime;
+        {            
+            if (target != null)
+            {                
+                var heading = target.position - transform.position;
+                Debug.DrawLine(transform.position, target.position, Color.black);
+                transform.rotation = Quaternion.Slerp(transform.rotation,
+                    Quaternion.LookRotation(heading, Vector3.up), targeting_speed);
+            }
+            rb.AddForce(transform.forward * thrust);
+            Debug.DrawRay(transform.position, transform.forward);
         }
 
         //TODO пореже это делать:
-        if (targeting)
-        {
-            target = FindClosestTarget();
-            var heading = target.transform.position - transform.position;            
-            Debug.DrawLine(transform.position, target.transform.position, Color.black);
-            transform.rotation = Quaternion.Slerp(transform.rotation,
-                Quaternion.LookRotation(heading, Vector3.up), targeting_speed);
-            //transform.rotation = Quaternion.LookRotation(heading, Vector3.up);
-        }
+        
 
         if (engine_is_on && Time.time > timeOfStart + engine_tol)
             OutOfFuel();
@@ -70,21 +69,17 @@ public class RocketNavigator : MonoBehaviour
         ps.Play();
         GetComponentInChildren<TrailRenderer>().enabled = false;
         GetComponentInChildren<BoxCollider>().enabled = false;
-        cruiseSpeed = 0; //остановить
-        targeting_speed = 0; //не вращать
         transform.Find("Model").gameObject.SetActive(false);
         tol = Time.time + ps.main.duration + 0.1f; //удалить когда анимация кончится с запасиком
     }
 
     private void OutOfFuel()
     {                
-        GetComponentInChildren<TrailRenderer>().enabled = false;
-        Rigidbody rb = GetComponent<Rigidbody>();
+        GetComponentInChildren<TrailRenderer>().enabled = false;        
         rb.useGravity = true;
-        rb.velocity = speed * this.transform.forward;
+        rb.drag = dragAfterDeath;
         rb.AddTorque(new Vector3(Random.Range(-100,100), Random.Range(-100, 100), Random.Range(-100, 100)));
         engine_is_on = false;
-        targeting = false;
     }
 
     void Destroy()
@@ -92,25 +87,25 @@ public class RocketNavigator : MonoBehaviour
         Destroy(this.gameObject);
     }
 
-    public GameObject FindClosestTarget()
-    {
-        Object[] gos;
-        gos = FindObjectsOfType(typeof(RocketTarget));
-        GameObject closest = null;
-        float distance = Mathf.Infinity;
-        Vector3 position = transform.position;
-        foreach (Object go in gos)
-        {
-            GameObject rt = ((RocketTarget)go).gameObject;
-            Vector3 diff = rt.transform.position - position;
-            float curDistance = diff.sqrMagnitude;
-            //if (curDistance < distance && curDistance > 0.1)
-            if (curDistance < distance)
-            {
-                closest = rt;
-                distance = curDistance;
-            }
-        }
-        return closest;
-    }
+    //public GameObject FindClosestTarget()
+    //{
+    //    Object[] gos;
+    //    gos = FindObjectsOfType(typeof(RocketTarget));
+    //    GameObject closest = null;
+    //    float distance = Mathf.Infinity;
+    //    Vector3 position = transform.position;
+    //    foreach (Object go in gos)
+    //    {
+    //        GameObject rt = ((RocketTarget)go).gameObject;
+    //        Vector3 diff = rt.transform.position - position;
+    //        float curDistance = diff.sqrMagnitude;
+    //        //if (curDistance < distance && curDistance > 0.1)
+    //        if (curDistance < distance)
+    //        {
+    //            closest = rt;
+    //            distance = curDistance;
+    //        }
+    //    }
+    //    return closest;
+    //}
 }
