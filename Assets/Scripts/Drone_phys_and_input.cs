@@ -77,7 +77,8 @@ public class Drone_phys_and_input : MonoBehaviour
         float yaw = InputReader.yaw;
         float pit = InputReader.pitch;
         float rol = InputReader.roll;
-        bool arm = InputReader.arm;
+        bool arm = true;//todo InputReader.arm;//InputReader.arm;
+        bool fire = InputReader.fire;//InputReader.arm;
 
 
         if (!fight_started)
@@ -97,6 +98,12 @@ public class Drone_phys_and_input : MonoBehaviour
                 bfcalc(pit, rcRate, expo, superRate) * Time.deltaTime,
                 bfcalc(yaw, rcRate, expo, superRate) * Time.deltaTime,
                 bfcalc(-rol, rcRate, expo, superRate) * Time.deltaTime));
+
+        if (fire)
+        {
+            print("fireing");
+            GetComponentInChildren<ProjectileShooter>().Shoot();
+        }
 
         //моя физика:
         if (!my_phys_turn_off_time.HasValue ||

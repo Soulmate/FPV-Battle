@@ -3,14 +3,18 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System;
 
 public class InputReader : MonoBehaviour
 {
     //надо в инпут менеджере все эти оси забить, названия ax1, ax2 и т.д.
     //первые 8 - оси с джойстика по порядку, следующие 8 - кнопки джойстика
-    const int axes_count = 16; 
 
+    //todo Добавить возможность ограничения (для геймпада будет удобно)
+    const int axes_count = 16;
+    private const double MinimumAxisValueForTrue = 0.5; //минимальное значение на канале, подключенному к логическому входу, чтобы там считалось тру
     public static float[] joy_axes = new float[axes_count];
 
     static Transform canvas_transform;
@@ -25,22 +29,27 @@ public class InputReader : MonoBehaviour
     public static bool arm;
     public static bool fire;
 
+    //лист воможных инпутов
+    static List<string> Input_names_list = new List<string>() {
+        "Trottle",
+        "Yaw",
+        "Pitch",
+        "Roll",
+        "Arm",
+        "Fire" };
 
-    class InputMappingEntry
+    static int?[] axesInputs = new int?[axes_count] //инпут для каждой оси
     {
-        public string name;
-        public int? axis_num;
-        public bool inverted = false;
-    }
-    static InputMappingEntry[] mappingArray = new InputMappingEntry[]
-    {
-        new InputMappingEntry(){ axis_num = 0, name  = "Trottle",  },
-        new InputMappingEntry(){ axis_num = 1, name  = "Yaw",  },
-        new InputMappingEntry(){ axis_num = 2, name  = "Pitch",  },
-        new InputMappingEntry(){ axis_num = 3, name  = "Roll",  },
-        new InputMappingEntry(){ axis_num = 10, name  = "Arm",  },
-        new InputMappingEntry(){ axis_num = 11, name  = "Fire", },
+        0, //"Trottle",  },
+        1, //"Yaw",  },
+        2, //"Pitch",  },
+        3, //"Roll",  },
+        null,null,null,null,null,
+        4, //"Arm",  },
+        5, //"Fire", },
+        null,null,null,null,null
     };
+    static bool[] axesInverts = new bool[axes_count]; //инверт для каждой оси, по умолчанию все выключены
 
     static bool showingControls = true;
     static void ShowControls()
@@ -59,17 +68,25 @@ public class InputReader : MonoBehaviour
     {
         canvas_transform = transform.Find("Canvas");
 
-        canvas_transform.Find("Button").GetComponent<Button>().onClick.AddListener(ApplyChanges);
+        canvas_transform.Find("Button_Apply").GetComponent<Button>().onClick.AddListener(ReadUIValues);
+        canvas_transform.Find("Button_SaveToFile").GetComponent<Button>().onClick.AddListener(Button_SaveToFile_Press);
+        canvas_transform.Find("Button_LoadFromFile").GetComponent<Button>().onClick.AddListener(LoadFile);
+        canvas_transform.Find("Button_Clear").GetComponent<Button>().onClick.AddListener(ClearValues);
 
         //лист воможных инпутов
         List<Dropdown.OptionData> m_Messages = new List<Dropdown.OptionData>();
         m_Messages.Add(new Dropdown.OptionData() { text = "None" });
-        foreach (InputMappingEntry e in mappingArray) //Добавляем все возможные инпуты
-            m_Messages.Add(new Dropdown.OptionData() { text = e.name });
+        foreach (string s in Input_names_list) //Добавляем все возможные инпуты
+            m_Messages.Add(new Dropdown.OptionData() { text = s });
 
         //https://stackoverflow.com/questions/41194515/unity-create-ui-control-from-script
         DefaultControls.Resources uiResources = new DefaultControls.Resources();
-        uiResources.checkmark = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Checkmark.psd");
+        //uiResources.checkmark = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Checkmark.psd");
+        //uiResources.checkmark = Resources.Load<Sprite>("Textures/Checkmark.png");
+        Texture2D SpriteTexture = LoadTexture("Assets/Sprites/Checkmark.png");
+        uiResources.checkmark = Sprite.Create(SpriteTexture, new Rect(0, 0, SpriteTexture.width, SpriteTexture.height), new Vector2(0, 0));
+
+
         for (int i = 0; i < axes_count; i++)
         {
             uiSlider_arr[i] = DefaultControls.CreateSlider(uiResources);
@@ -82,7 +99,6 @@ public class InputReader : MonoBehaviour
 
             uiToggle_arr[i].transform.SetParent(canvas_transform, false);
             uiToggle_arr[i].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert";
-            uiToggle_arr[i].GetComponent<Toggle>().isOn = false; //TODO read
             uiToggle_arr[i].transform.position = new Vector3(300, 1200 - i * 70, 0);
 
             uiDropdown_arr[i] = DefaultControls.CreateDropdown(uiResources);
@@ -90,19 +106,48 @@ public class InputReader : MonoBehaviour
             uiDropdown_arr[i].GetComponent<Dropdown>().ClearOptions();
             foreach (Dropdown.OptionData message in m_Messages)
                 uiDropdown_arr[i].GetComponent<Dropdown>().options.Add(message);
-            var me = mappingArray.FirstOrDefault((t) => t.axis_num == i); //ищем на что забита эта ось
-            if (EqualityComparer<InputMappingEntry>.Default.Equals(me, default(InputMappingEntry))) //если не нашелся элемент
-                uiDropdown_arr[i].GetComponent<Dropdown>().value = 0;
-            else
-                uiDropdown_arr[i].GetComponent<Dropdown>().value = me.axis_num.Value + 1;
+
             uiDropdown_arr[i].transform.position = new Vector3(400, 1200 - i * 70, 0);
         }
-        //print(uiSlider.transform.position);
+
+        UpdateUIvalues();
+
+        LoadFile(); //загружаем по возможности mapping_axes_Array
+    }
+
+    private void Button_SaveToFile_Press()
+    {
+        ReadUIValues();
+        SaveFile();
+    }
+
+    private static void UpdateUIvalues()
+    {
+        for (int i = 0; i < axes_count; i++)
+        {
+            uiToggle_arr[i].GetComponent<Toggle>().isOn = axesInverts[i]; //TODO read
+
+            //var me = Array.IndexOf(axesInputs, i); //ищем на что забита эта ось
+
+            uiDropdown_arr[i].GetComponent<Dropdown>().value =
+                axesInputs[i].HasValue ?
+                axesInputs[i].Value + 1 : 0; //+1 так как первый None
+        }
+    }
+
+    private static void ClearValues()
+    {
+        for (int i = 0; i < axes_count; i++)
+        {
+            axesInputs[i] = null;
+            axesInverts[i] = false;
+        }
+        UpdateUIvalues();
     }
 
     void FixedUpdate()
     {
-        UpdateAxes();
+        ReadJoystickValues();
     }
     private void Update()
     {
@@ -118,44 +163,131 @@ public class InputReader : MonoBehaviour
                 ShowControls();
     }
 
-    private static void UpdateAxes()
+    private static void ReadJoystickValues()
     {
         for (int i = 0; i < axes_count; i++)
-        {
             joy_axes[i] = Input.GetAxis($"ax{i + 1}");
-        }
 
-        throttle = joy_axes[mappingArray[0].axis_num.Value];
-        yaw = joy_axes[mappingArray[1].axis_num.Value];
-        pitch = joy_axes[mappingArray[2].axis_num.Value];
-        roll = joy_axes[mappingArray[3].axis_num.Value];
-        if (mappingArray[4].axis_num.HasValue)
-            arm = joy_axes[mappingArray[4].axis_num.Value] > 0.1; //TODO константу
-        else
-            arm = true;
-        if (mappingArray[5].axis_num.HasValue)
-            fire = joy_axes[mappingArray[5].axis_num.Value] > 0.1;
-        else
-            fire = false;
-        if (mappingArray[0].inverted) throttle = -throttle;
-        if (mappingArray[1].inverted) yaw = -yaw;
-        if (mappingArray[2].inverted) pitch = -pitch;
-        if (mappingArray[3].inverted) roll = -roll;
-        if (mappingArray[4].inverted) arm = !arm;
-        if (mappingArray[5].inverted) fire = !fire;
+        throttle = GetInputValueFromAxis(0) ?? -1;
+        yaw = GetInputValueFromAxis(1) ?? 0;
+        pitch = GetInputValueFromAxis(2) ?? 0;
+        roll = GetInputValueFromAxis(3) ?? 0;
+        arm = (GetInputValueFromAxis(4) ?? 1) > MinimumAxisValueForTrue; //если канал не подключен, будет тру
+        fire = (GetInputValueFromAxis(5) ?? -1) > MinimumAxisValueForTrue; //если канал не подключен, будет false                
     }
 
-    void ApplyChanges()
+    private static float? GetInputValueFromAxis(int input_number)
+    {
+        float? input_value = null;
+        var i = Array.IndexOf(axesInputs, input_number); //ищем номер оси, подходящий //TODO 1) это медленно 2) если забито несколько осей
+        if (i != -1 && axesInputs[i].HasValue) //если не нашлось     
+        {
+            input_value = joy_axes[i];
+            if (axesInverts[i]) input_value = -input_value;
+        }
+        return input_value;
+    }
+
+    void ReadUIValues()
     {
         for (int i = 0; i < axes_count; i++)
         {
             int input_num = uiDropdown_arr[i].GetComponent<Dropdown>().value;
             bool inverted = uiToggle_arr[i].GetComponent<Toggle>().isOn;
-            if (input_num > 0)
-            {
-                mappingArray[input_num - 1].axis_num = i; //+1 т.к. первый None
-                mappingArray[input_num - 1].inverted = inverted;
-            }
+            axesInputs[i] = input_num - 1; //-1 т.к. первый None               
+            axesInverts[i] = inverted;
         }
+    }
+
+    // SAVE LOAD
+    [System.Serializable]
+    class InputParameters
+    {
+        public int?[] mapping_axes_Array;
+        public bool[] mapping_inverts_Array;
+
+        public InputParameters(int?[] mapping_axes_Array, bool[] mapping_inverts_Array)
+        {
+            this.mapping_axes_Array = mapping_axes_Array;
+            this.mapping_inverts_Array = mapping_inverts_Array;
+        }
+    }
+
+    public void SaveFile()
+    {
+        string destination = Application.persistentDataPath + "/Bindings.dat";
+        Debug.Log("Saving to " + destination);
+        FileStream file;
+
+        if (File.Exists(destination)) file = File.OpenWrite(destination);
+        else file = File.Create(destination);
+
+        InputParameters data = new InputParameters(axesInputs, axesInverts);
+        BinaryFormatter bf = new BinaryFormatter();
+        bf.Serialize(file, data);
+        file.Close();
+        Debug.Log("Saved to " + destination);
+    }
+
+    public void LoadFile()
+    {
+        string destination = Application.persistentDataPath + "/Bindings.dat";
+        Debug.Log("Loading from " + destination);
+
+
+        FileStream file;
+
+        if (File.Exists(destination)) file = File.OpenRead(destination);
+        else
+        {
+            Debug.LogError("File not found");
+            return;
+        }
+
+        bool file_format_is_good = true;
+        BinaryFormatter bf = new BinaryFormatter();
+        try
+        {
+            InputParameters data = (InputParameters)bf.Deserialize(file);
+            axesInputs = data.mapping_axes_Array;
+            axesInverts = data.mapping_inverts_Array;
+            UpdateUIvalues();
+        }
+        catch
+        {
+            file_format_is_good = false;
+        }
+
+        file.Close();
+        if (!file_format_is_good)
+        {
+            Debug.LogError("Невернвый формат файла");
+            File.Delete(destination);
+            return;
+        }
+
+        Debug.Log("Loaded from " + destination);
+        Debug.Log(axesInverts);
+    }
+
+
+
+    public Texture2D LoadTexture(string FilePath)
+    {
+        //https://forum.unity.com/threads/generating-sprites-dynamically-from-png-or-jpeg-files-in-c.343735/
+        // Load a PNG or JPG file from disk to a Texture2D
+        // Returns null if load fails
+
+        Texture2D Tex2D;
+        byte[] FileData;
+
+        if (File.Exists(FilePath))
+        {
+            FileData = File.ReadAllBytes(FilePath);
+            Tex2D = new Texture2D(2, 2);           // Create new "empty" texture
+            if (Tex2D.LoadImage(FileData))           // Load the imagedata into the texture (size is set automatically)
+                return Tex2D;                 // If data = readable -> return texture
+        }
+        return null;                     // Return null if load failed
     }
 }
