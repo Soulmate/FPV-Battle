@@ -6,6 +6,8 @@ using System;
 
 public class Drone_phys_and_input : MonoBehaviour
 {
+    InputReader inputReader;
+
     // Start is called before the first frame update
     public float drone_power = 45;
 
@@ -33,6 +35,7 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void Start()
     {
+        inputReader = FindObjectOfType<InputReader>(); //todo покрасивше. сигнлтон
         //drone_cam_transform = GameObject.Find("Drone Camera").transform; //TODO использовать угол камеры, а не сам объект
         my_phys_turn_off_time = Time.time;
 
@@ -73,12 +76,12 @@ public class Drone_phys_and_input : MonoBehaviour
 
 
         //todo избавиться от ада с номерами, убрать в другое место
-        float thr = InputReader.throttle;
-        float yaw = InputReader.yaw;
-        float pit = InputReader.pitch;
-        float rol = InputReader.roll;
+        float thr = inputReader.throttle;
+        float yaw = inputReader.yaw;
+        float pit = inputReader.pitch;
+        float rol = inputReader.roll;
         bool arm = true;//todo InputReader.arm;//InputReader.arm;
-        bool fire = InputReader.fire;//InputReader.arm;
+        bool fire = inputReader.fire;//InputReader.arm;
 
 
         if (!fight_started)
