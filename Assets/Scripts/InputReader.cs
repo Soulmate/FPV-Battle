@@ -89,25 +89,32 @@ public class InputReader : MonoBehaviour
 
         for (int i = 0; i < axes_count; i++)
         {
+            const int y_px_period = 50;
+
             uiSlider_arr[i] = DefaultControls.CreateSlider(uiResources);
             uiSlider_arr[i].transform.SetParent(canvas_transform, false);
             uiSlider_arr[i].GetComponent<Slider>().minValue = -1;
             uiSlider_arr[i].GetComponent<Slider>().maxValue = 1;
-            uiSlider_arr[i].transform.position = new Vector3(100, 1200 - i * 70, 0);
-
+            uiSlider_arr[i].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+            uiSlider_arr[i].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+            uiSlider_arr[i].GetComponent<RectTransform>().anchoredPosition = new Vector2(130, -50 - i * y_px_period);
+            
             uiToggle_arr[i] = DefaultControls.CreateToggle(uiResources);
 
             uiToggle_arr[i].transform.SetParent(canvas_transform, false);
             uiToggle_arr[i].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert";
-            uiToggle_arr[i].transform.position = new Vector3(300, 1200 - i * 70, 0);
+            uiToggle_arr[i].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+            uiToggle_arr[i].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+            uiToggle_arr[i].GetComponent<RectTransform>().anchoredPosition = new Vector3(310, -50 - i * y_px_period);
 
             uiDropdown_arr[i] = DefaultControls.CreateDropdown(uiResources);
             uiDropdown_arr[i].transform.SetParent(canvas_transform, false);
             uiDropdown_arr[i].GetComponent<Dropdown>().ClearOptions();
+            uiDropdown_arr[i].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+            uiDropdown_arr[i].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+            uiDropdown_arr[i].GetComponent<RectTransform>().anchoredPosition = new Vector3(400, -50 - i * y_px_period);
             foreach (Dropdown.OptionData message in m_Messages)
                 uiDropdown_arr[i].GetComponent<Dropdown>().options.Add(message);
-
-            uiDropdown_arr[i].transform.position = new Vector3(400, 1200 - i * 70, 0);
         }
 
         UpdateUIvalues();
@@ -215,7 +222,10 @@ public class InputReader : MonoBehaviour
 
     public void SaveFile()
     {
-        string destination = Application.persistentDataPath + "/Bindings.dat";
+        //string destination = Application.persistentDataPath + "/Bindings.dat";
+        Directory.CreateDirectory(System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/My Games/FPV Battle");
+        string destination = System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/My Games/FPV Battle/Bindings.dat";
+
         Debug.Log("Saving to " + destination);
         FileStream file;
 
@@ -231,7 +241,9 @@ public class InputReader : MonoBehaviour
 
     public void LoadFile()
     {
-        string destination = Application.persistentDataPath + "/Bindings.dat";
+        //string destination = Application.persistentDataPath + "/Bindings.dat";
+        
+        string destination = System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)  + "/My Games/FPV Battle/Bindings.dat";
         Debug.Log("Loading from " + destination);
 
 
