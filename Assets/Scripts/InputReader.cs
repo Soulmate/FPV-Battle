@@ -19,6 +19,7 @@ public class InputReader : MonoBehaviour
     public static float[,] joy_axes = new float[axes_count, joy_count];    
 
     static Transform canvas_transform;
+    static Transform scrollableContent;
     static GameObject[,] uiSlider_arr = new GameObject[axes_count, joy_count];
     static GameObject[,] uiToggle_arr = new GameObject[axes_count, joy_count];
     static GameObject[,] uiDropdown_arr = new GameObject[axes_count, joy_count];
@@ -57,6 +58,7 @@ public class InputReader : MonoBehaviour
     private void Start()
     {
         canvas_transform = transform.Find("Canvas");
+        scrollableContent = transform.Find("Canvas/ScrollableContent");
 
         canvas_transform.Find("Button_Apply").GetComponent<Button>().onClick.AddListener(ReadUIValues);
         canvas_transform.Find("Button_SaveToFile").GetComponent<Button>().onClick.AddListener(Button_SaveToFile_Press);
@@ -84,7 +86,7 @@ public class InputReader : MonoBehaviour
                 const int y_px_period = 50;
 
                 uiSlider_arr[i,j] = DefaultControls.CreateSlider(uiResources);
-                uiSlider_arr[i,j].transform.SetParent(canvas_transform, false);
+                uiSlider_arr[i,j].transform.SetParent(scrollableContent, false);
                 uiSlider_arr[i,j].GetComponent<Slider>().minValue = -1;
                 uiSlider_arr[i,j].GetComponent<Slider>().maxValue = 1;
                 uiSlider_arr[i,j].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
@@ -93,14 +95,14 @@ public class InputReader : MonoBehaviour
 
                 uiToggle_arr[i,j] = DefaultControls.CreateToggle(uiResources);
 
-                uiToggle_arr[i,j].transform.SetParent(canvas_transform, false);
+                uiToggle_arr[i,j].transform.SetParent(scrollableContent, false);
                 uiToggle_arr[i,j].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert";
                 uiToggle_arr[i,j].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
                 uiToggle_arr[i,j].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
                 uiToggle_arr[i,j].GetComponent<RectTransform>().anchoredPosition = new Vector3(310 + j * 500, -50 - i * y_px_period);
 
                 uiDropdown_arr[i,j] = DefaultControls.CreateDropdown(uiResources);
-                uiDropdown_arr[i,j].transform.SetParent(canvas_transform, false);
+                uiDropdown_arr[i,j].transform.SetParent(scrollableContent, false);
                 uiDropdown_arr[i,j].GetComponent<Dropdown>().ClearOptions();
                 uiDropdown_arr[i,j].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
                 uiDropdown_arr[i,j].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
