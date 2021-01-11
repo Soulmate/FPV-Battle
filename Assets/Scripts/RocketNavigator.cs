@@ -64,7 +64,7 @@ public class RocketNavigator : MonoBehaviour
 
 
     private void Kill() 
-    {
+    {        
         ParticleSystem ps = GetComponentInChildren<ParticleSystem>();
         ps.Play();
         GetComponentInChildren<TrailRenderer>().enabled = false;

@@ -14,13 +14,14 @@ public class InputReader : MonoBehaviour
 
     //todo Добавить возможность ограничения (для геймпада будет удобно)
     const int axes_count = 16;
+    const int joy_count = 3; //0 - все, 1 - первый, 2 - второй
     private const double MinimumAxisValueForTrue = 0.5; //минимальное значение на канале, подключенному к логическому входу, чтобы там считалось тру
-    public static float[] joy_axes = new float[axes_count];
+    public static float[,] joy_axes = new float[axes_count, joy_count];    
 
     static Transform canvas_transform;
-    static GameObject[] uiSlider_arr = new GameObject[axes_count];
-    static GameObject[] uiToggle_arr = new GameObject[axes_count];
-    static GameObject[] uiDropdown_arr = new GameObject[axes_count];
+    static GameObject[,] uiSlider_arr = new GameObject[axes_count, joy_count];
+    static GameObject[,] uiToggle_arr = new GameObject[axes_count, joy_count];
+    static GameObject[,] uiDropdown_arr = new GameObject[axes_count, joy_count];
 
     public static float throttle;
     public static float yaw;
@@ -37,19 +38,8 @@ public class InputReader : MonoBehaviour
         "Roll",
         "Arm",
         "Fire" };
-
-    static int?[] axesInputs = new int?[axes_count] //инпут для каждой оси
-    {
-        0, //"Trottle",  },
-        1, //"Yaw",  },
-        2, //"Pitch",  },
-        3, //"Roll",  },
-        null,null,null,null,null,
-        4, //"Arm",  },
-        5, //"Fire", },
-        null,null,null,null,null
-    };
-    static bool[] axesInverts = new bool[axes_count]; //инверт для каждой оси, по умолчанию все выключены
+    static int?[,] axesInputs = new int?[axes_count, joy_count]; //инпут для каждой оси
+    static bool[,] axesInverts = new bool[axes_count, joy_count]; //инверт для каждой оси, по умолчанию все выключены
 
     static bool showingControls = true;
     static void ShowControls()
@@ -89,32 +79,35 @@ public class InputReader : MonoBehaviour
 
         for (int i = 0; i < axes_count; i++)
         {
-            const int y_px_period = 50;
+            for (int j = 0; j < joy_count; j++)
+            {
+                const int y_px_period = 50;
 
-            uiSlider_arr[i] = DefaultControls.CreateSlider(uiResources);
-            uiSlider_arr[i].transform.SetParent(canvas_transform, false);
-            uiSlider_arr[i].GetComponent<Slider>().minValue = -1;
-            uiSlider_arr[i].GetComponent<Slider>().maxValue = 1;
-            uiSlider_arr[i].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
-            uiSlider_arr[i].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
-            uiSlider_arr[i].GetComponent<RectTransform>().anchoredPosition = new Vector2(130, -50 - i * y_px_period);
-            
-            uiToggle_arr[i] = DefaultControls.CreateToggle(uiResources);
+                uiSlider_arr[i,j] = DefaultControls.CreateSlider(uiResources);
+                uiSlider_arr[i,j].transform.SetParent(canvas_transform, false);
+                uiSlider_arr[i,j].GetComponent<Slider>().minValue = -1;
+                uiSlider_arr[i,j].GetComponent<Slider>().maxValue = 1;
+                uiSlider_arr[i,j].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+                uiSlider_arr[i,j].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+                uiSlider_arr[i,j].GetComponent<RectTransform>().anchoredPosition = new Vector2(130 + j*500, -50 - i * y_px_period);
 
-            uiToggle_arr[i].transform.SetParent(canvas_transform, false);
-            uiToggle_arr[i].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert";
-            uiToggle_arr[i].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
-            uiToggle_arr[i].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
-            uiToggle_arr[i].GetComponent<RectTransform>().anchoredPosition = new Vector3(310, -50 - i * y_px_period);
+                uiToggle_arr[i,j] = DefaultControls.CreateToggle(uiResources);
 
-            uiDropdown_arr[i] = DefaultControls.CreateDropdown(uiResources);
-            uiDropdown_arr[i].transform.SetParent(canvas_transform, false);
-            uiDropdown_arr[i].GetComponent<Dropdown>().ClearOptions();
-            uiDropdown_arr[i].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
-            uiDropdown_arr[i].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
-            uiDropdown_arr[i].GetComponent<RectTransform>().anchoredPosition = new Vector3(400, -50 - i * y_px_period);
-            foreach (Dropdown.OptionData message in m_Messages)
-                uiDropdown_arr[i].GetComponent<Dropdown>().options.Add(message);
+                uiToggle_arr[i,j].transform.SetParent(canvas_transform, false);
+                uiToggle_arr[i,j].GetComponent<Toggle>().transform.Find("Label").GetComponent<Text>().text = "Invert";
+                uiToggle_arr[i,j].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+                uiToggle_arr[i,j].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+                uiToggle_arr[i,j].GetComponent<RectTransform>().anchoredPosition = new Vector3(310 + j * 500, -50 - i * y_px_period);
+
+                uiDropdown_arr[i,j] = DefaultControls.CreateDropdown(uiResources);
+                uiDropdown_arr[i,j].transform.SetParent(canvas_transform, false);
+                uiDropdown_arr[i,j].GetComponent<Dropdown>().ClearOptions();
+                uiDropdown_arr[i,j].GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+                uiDropdown_arr[i,j].GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+                uiDropdown_arr[i,j].GetComponent<RectTransform>().anchoredPosition = new Vector3(400 + j * 500, -50 - i * y_px_period);
+                foreach (Dropdown.OptionData message in m_Messages)
+                    uiDropdown_arr[i,j].GetComponent<Dropdown>().options.Add(message);
+            }
         }
 
         UpdateUIvalues();
@@ -132,13 +125,16 @@ public class InputReader : MonoBehaviour
     {
         for (int i = 0; i < axes_count; i++)
         {
-            uiToggle_arr[i].GetComponent<Toggle>().isOn = axesInverts[i]; //TODO read
+            for (int j = 0; j < joy_count; j++)
+            {
+                uiToggle_arr[i,j].GetComponent<Toggle>().isOn = axesInverts[i, j]; //TODO read
 
-            //var me = Array.IndexOf(axesInputs, i); //ищем на что забита эта ось
+                //var me = Array.IndexOf(axesInputs, i); //ищем на что забита эта ось
 
-            uiDropdown_arr[i].GetComponent<Dropdown>().value =
-                axesInputs[i].HasValue ?
-                axesInputs[i].Value + 1 : 0; //+1 так как первый None
+                uiDropdown_arr[i, j].GetComponent<Dropdown>().value =
+                    axesInputs[i, j].HasValue ?
+                    axesInputs[i, j].Value + 1 : 0; //+1 так как первый None
+            }
         }
     }
 
@@ -146,8 +142,11 @@ public class InputReader : MonoBehaviour
     {
         for (int i = 0; i < axes_count; i++)
         {
-            axesInputs[i] = null;
-            axesInverts[i] = false;
+            for (int j = 0; j < joy_count; j++)
+            {
+                axesInputs[i,j] = null;
+                axesInverts[i,j] = false;
+            }
         }
         UpdateUIvalues();
     }
@@ -160,7 +159,10 @@ public class InputReader : MonoBehaviour
     {
         for (int i = 0; i < axes_count; i++)
         {
-            uiSlider_arr[i].GetComponent<Slider>().value = joy_axes[i];
+            for (int j = 0; j < joy_count; j++)
+            {
+                uiSlider_arr[i,j].GetComponent<Slider>().value = joy_axes[i,j];
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -173,7 +175,11 @@ public class InputReader : MonoBehaviour
     private static void ReadJoystickValues()
     {
         for (int i = 0; i < axes_count; i++)
-            joy_axes[i] = Input.GetAxis($"ax{i + 1}");
+            joy_axes[i,0] = Input.GetAxis($"ax{i + 1}");
+        for (int i = 0; i < axes_count; i++)
+            joy_axes[i, 1] = Input.GetAxis($"j1ax{i + 1}");
+        for (int i = 0; i < axes_count; i++)
+            joy_axes[i, 2] = Input.GetAxis($"j2ax{i + 1}");
 
         throttle = GetInputValueFromAxis(0) ?? -1;
         yaw = GetInputValueFromAxis(1) ?? 0;
@@ -186,11 +192,11 @@ public class InputReader : MonoBehaviour
     private static float? GetInputValueFromAxis(int input_number)
     {
         float? input_value = null;
-        var i = Array.IndexOf(axesInputs, input_number); //ищем номер оси, подходящий //TODO 1) это медленно 2) если забито несколько осей
-        if (i != -1 && axesInputs[i].HasValue) //если не нашлось     
+        var ij = CoordinatesOf<int?>(axesInputs, input_number); //ищем номер оси, подходящий //TODO 1) это медленно 2) если забито несколько осей
+        if (ij.Item1 != -1 && axesInputs[ij.Item1, ij.Item2].HasValue) //если не нашлось     
         {
-            input_value = joy_axes[i];
-            if (axesInverts[i]) input_value = -input_value;
+            input_value = joy_axes[ij.Item1, ij.Item2];
+            if (axesInverts[ij.Item1, ij.Item2]) input_value = -input_value;
         }
         return input_value;
     }
@@ -199,10 +205,13 @@ public class InputReader : MonoBehaviour
     {
         for (int i = 0; i < axes_count; i++)
         {
-            int input_num = uiDropdown_arr[i].GetComponent<Dropdown>().value;
-            bool inverted = uiToggle_arr[i].GetComponent<Toggle>().isOn;
-            axesInputs[i] = input_num - 1; //-1 т.к. первый None               
-            axesInverts[i] = inverted;
+            for (int j = 0; j < joy_count; j++)
+            {
+                int input_num = uiDropdown_arr[i,j].GetComponent<Dropdown>().value;
+                bool inverted = uiToggle_arr[i, j].GetComponent<Toggle>().isOn;
+                axesInputs[i, j] = input_num - 1; //-1 т.к. первый None               
+                axesInverts[i, j] = inverted;
+            }
         }
     }
 
@@ -210,10 +219,10 @@ public class InputReader : MonoBehaviour
     [System.Serializable]
     class InputParameters
     {
-        public int?[] mapping_axes_Array;
-        public bool[] mapping_inverts_Array;
+        public int?[,] mapping_axes_Array;
+        public bool[,] mapping_inverts_Array;
 
-        public InputParameters(int?[] mapping_axes_Array, bool[] mapping_inverts_Array)
+        public InputParameters(int?[,] mapping_axes_Array, bool[,] mapping_inverts_Array)
         {
             this.mapping_axes_Array = mapping_axes_Array;
             this.mapping_inverts_Array = mapping_inverts_Array;
@@ -284,6 +293,24 @@ public class InputReader : MonoBehaviour
 
 
 
+    public static Tuple<int, int> CoordinatesOf<T>(T[,] matrix, T value)
+    {
+        int w = matrix.GetLength(0); // width
+        int h = matrix.GetLength(1); // height
+
+        for (int x = 0; x < w; ++x)
+        {
+            for (int y = 0; y < h; ++y)
+            {
+                if (matrix[x, y].Equals(value))
+                    return Tuple.Create(x, y);
+            }
+        }
+
+        return Tuple.Create(-1, -1);
+    }
+
+
     public Texture2D LoadTexture(string FilePath)
     {
         //https://forum.unity.com/threads/generating-sprites-dynamically-from-png-or-jpeg-files-in-c.343735/
@@ -302,4 +329,5 @@ public class InputReader : MonoBehaviour
         }
         return null;                     // Return null if load failed
     }
+      
 }
