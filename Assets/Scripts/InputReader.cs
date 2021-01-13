@@ -14,32 +14,41 @@ public class InputReader : MonoBehaviour
     public const int axes_count = 48;
     public const int joy_count = 3; //0 - все, 1 - первый, 2 - второй
     private const double MinimumAxisValueForTrue = 0.5; //минимальное значение на канале, подключенному к логическому входу, чтобы там считалось тру
-    public float[,] joy_axes = new float[axes_count, joy_count];
+    public static float[,] joy_axes = new float[axes_count, joy_count];
 
-    public float throttle;
-    public float yaw;
-    public float pitch;
-    public float roll;
-    public bool arm;
-    public bool fire;
+    public static float throttle;
+    public static float yaw;
+    public static float pitch;
+    public static float roll;
+    public static bool arm;
+    public static bool fire;
 
-    public event EventHandler OnConfigChange;
+    public static event EventHandler OnConfigChange;
 
     //лист воможных инпутов
-    public List<string> input_names_list = new List<string>() {
+    public static List<string> input_names_list = new List<string>() {
         "Trottle",
         "Yaw",
         "Pitch",
         "Roll",
         "Arm",
         "Fire" };
-    public int?[,] axesInputs = new int?[axes_count, joy_count]; //инпут для каждой оси
-    public bool[,] axesInverts = new bool[axes_count, joy_count]; //инверт для каждой оси, по умолчанию все выключены
+    public static int?[,] axesInputs = new int?[axes_count, joy_count]; //инпут для каждой оси
+    public static bool[,] axesInverts = new bool[axes_count, joy_count]; //инверт для каждой оси, по умолчанию все выключены
+
+
     private void Start()
     {
         LoadFromFile();    
     }
-    public void ClearValues()
+    private void FixedUpdate()
+    {
+        ReadJoystickValues();
+    }
+
+
+
+    public static void ClearValues()
     {
         for (int i = 0; i < axes_count; i++)
         {
@@ -49,17 +58,14 @@ public class InputReader : MonoBehaviour
                 axesInverts[i,j] = false;
             }
         }
-        OnConfigChange?.Invoke(this, new EventArgs());
+        OnConfigChange?.Invoke(null, new EventArgs());
     }
-    void FixedUpdate()
-    {
-        ReadJoystickValues();
-    }
-    private void ReadJoystickValues()
+    
+    private static void ReadJoystickValues()
     {
         for (int i = 0; i < axes_count; i++)
             for (int j = 0; j < joy_count; j++)
-                joy_axes[i, j] = Input.GetAxis($"j{j}ax{i}");
+                joy_axes[i, j] = Input.GetAxis($"j{j}a{i}");
         throttle = GetInputValueFromAxis(0) ?? -1;
         yaw = GetInputValueFromAxis(1) ?? 0;
         pitch = GetInputValueFromAxis(2) ?? 0;
@@ -68,7 +74,7 @@ public class InputReader : MonoBehaviour
         fire = (GetInputValueFromAxis(5) ?? -1) > MinimumAxisValueForTrue; //если канал не подключен, будет false                
     }
 
-    private float? GetInputValueFromAxis(int input_number)
+    private static float? GetInputValueFromAxis(int input_number)
     {
         float? input_value = null;
         var ij = CoordinatesOf<int?>(axesInputs, input_number); //ищем номер оси, подходящий //TODO 1) это медленно 2) если забито несколько осей
@@ -95,7 +101,7 @@ public class InputReader : MonoBehaviour
         }
     }
 
-    public void SaveToFile()
+    public static void SaveToFile()
     {
         //string destination = Application.persistentDataPath + "/Bindings.dat";
         Directory.CreateDirectory(System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/My Games/FPV Battle");
@@ -114,7 +120,7 @@ public class InputReader : MonoBehaviour
         Debug.Log("Saved to " + destination);
     }
 
-    public void LoadFromFile()
+    public static void LoadFromFile()
     {
         string destination = System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)  + "/My Games/FPV Battle/Bindings.dat";
         Debug.Log("Loading from " + destination);
@@ -136,7 +142,7 @@ public class InputReader : MonoBehaviour
             InputParameters data = (InputParameters)bf.Deserialize(file);
             axesInputs = data.mapping_axes_Array;
             axesInverts = data.mapping_inverts_Array;
-            OnConfigChange?.Invoke(this, new EventArgs());
+            OnConfigChange?.Invoke(null, new EventArgs());
         }
         catch
         {
