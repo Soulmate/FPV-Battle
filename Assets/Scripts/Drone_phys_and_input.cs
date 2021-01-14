@@ -23,21 +23,21 @@ public class Drone_phys_and_input : MonoBehaviour
     Transform drone_cam_transform;
 
 
-    float? my_phys_turn_off_time = null; //время когда отключилась моя физика
-    public float my_phys_turn_off_duration = 0.1f; //время когда отключилась моя физика
+    bool useMyPhys = true;    
+    public float my_phys_turn_off_duration = 0.1f; //длительность отключения физики при ударе
 
     AudioSource audioSource;
 
     public bool fight_started = true;
 
+    Rigidbody rb;
+
 
     void Start()
-    {        
+    {
         //drone_cam_transform = GameObject.Find("Drone Camera").transform; //TODO использовать угол камеры, а не сам объект
-        my_phys_turn_off_time = Time.time;
-
+        rb = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
-        print(audioSource);
     }
 
     /*void FixedUpdate()
@@ -61,54 +61,21 @@ public class Drone_phys_and_input : MonoBehaviour
         }
     }*/
 
-    void Update()
+    private void FixedUpdate()
     {
-
-        if (Input.GetKeyDown(KeyCode.R))
-            ResetDrone();
-
-        if (Input.GetKeyDown(KeyCode.P))
-            fight_started = !fight_started;
-
-
-
-        //todo избавиться от ада с номерами, убрать в другое место
-        float thr = InputReader.throttle;
-        float yaw = InputReader.yaw;
-        float pit = InputReader.pitch;
-        float rol = InputReader.roll;
-        bool arm = true;//todo InputReader.arm;//InputReader.arm;
-        bool fire = InputReader.fire;//InputReader.arm;
-
-
-        if (!fight_started)
+        if (useMyPhys)
         {
-            return;
-        }
+            float thr = InputReader.throttle;
+            float yaw = InputReader.yaw;
+            float pit = InputReader.pitch;
+            float rol = InputReader.roll;
+            bool arm = true;//todo InputReader.arm;//InputReader.arm;
 
+            transform.Rotate(new Vector3( // управление ориентацией дрона
+                    bfcalc(pit, rcRate, expo, superRate) * Time.fixedDeltaTime,
+                    bfcalc(yaw, rcRate, expo, superRate) * Time.fixedDeltaTime,
+                    bfcalc(-rol, rcRate, expo, superRate) * Time.fixedDeltaTime));
 
-        //audio:
-        audioSource.pitch = (thr + 1) * 0.5f * 0.5f + 0.5f;
-        audioSource.volume = (thr + 1) * 0.5f * 0.8f + 0.2f;
-
-
-        // управление ориентацией дрона
-        if (arm)
-            transform.Rotate(new Vector3(
-                bfcalc(pit, rcRate, expo, superRate) * Time.deltaTime,
-                bfcalc(yaw, rcRate, expo, superRate) * Time.deltaTime,
-                bfcalc(-rol, rcRate, expo, superRate) * Time.deltaTime));
-
-        if (fire)
-        {
-            print("fireing");
-            GetComponentInChildren<ProjectileShooter>().Shoot();
-        }
-
-        //моя физика:
-        if (!my_phys_turn_off_time.HasValue ||
-            my_phys_turn_off_time.Value + my_phys_turn_off_duration < Time.time)
-        {
             float force = (thr + 1f) / 2f * drone_power;
 
             Vector3 acc_gravity = new Vector3(0, -phys_gravity_g, 0);
@@ -120,15 +87,31 @@ public class Drone_phys_and_input : MonoBehaviour
             Vector3 acc_drag = -speed * phys_drag_coeff;
             accsel = acc_gravity + acc_throtle + acc_drag;
 
-            speed = speed + accsel * Time.deltaTime;
+            speed = speed + accsel * Time.fixedDeltaTime;
 
-
-            transform.Translate(speed * Time.deltaTime, Space.World);
+            transform.Translate(speed * Time.fixedDeltaTime, Space.World);
             //GetComponent<ConstantForce>().relativeForce = new Vector3(0, force, 0);
         }
         else
+            print("физика отключена");
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+            ResetDrone();
+
+        float thr = InputReader.throttle;
+        bool fire = InputReader.fire;//InputReader.arm;
+
+        //audio:
+        audioSource.pitch = (thr + 1) * 0.5f * 0.5f + 0.5f;
+        audioSource.volume = (thr + 1) * 0.5f * 0.8f + 0.2f;
+
+        if (fire)
         {
-            //print("физика отключена");
+            print("fireing");
+            GetComponentInChildren<ProjectileShooter>().Shoot();
         }
     }
 
@@ -141,7 +124,6 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-
         Turn_off_my_phys(); //выключить мою физику на время
 
 
@@ -149,20 +131,29 @@ public class Drone_phys_and_input : MonoBehaviour
         {
             Debug.DrawRay(contact.point, contact.normal, Color.white);
         }
-        /*if (collision.relativeVelocity.magnitude > 2)
-        {            
+        if (collision.relativeVelocity.magnitude > 2)
+        {
             print("БАМ");//audioSource.Play();
         }
         else
-            print("бум");//audioSource.Play();*/
+            print("бум");//audioSource.Play();
         //ResetDrone();*/
     }
 
 
     void Turn_off_my_phys()        //выключить мою физику временно
     {
-        speed = Vector3.zero;
-        my_phys_turn_off_time = Time.time;
+        //step back? 
+        //transform.Translate(-speed * Time.fixedDeltaTime, Space.World);
+        useMyPhys = false;        
+        rb.isKinematic = false;
+        Invoke("Turn_on_my_phys", my_phys_turn_off_duration);
+    }
+
+    void Turn_on_my_phys()        //выключить мою физику временно
+    {
+        useMyPhys = true;        
+        rb.isKinematic = true;
     }
 
 
