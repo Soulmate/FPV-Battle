@@ -11,10 +11,13 @@ using System;
 //туду сделать синглтоном
 public class InputReader : MonoBehaviour
 {
+    public const string currentVersion = "v1";
     public const int axes_count = 48;
     public const int joy_count = 3; //0 - все, 1 - первый, 2 - второй
+    public static InputParameters inputParameters = new InputParameters();
+
     private const double MinimumAxisValueForTrue = 0.5; //минимальное значение на канале, подключенному к логическому входу, чтобы там считалось тру
-    public static float[,] joy_axes = new float[axes_count, joy_count];
+    public static float[,] axes_value_arr = new float[axes_count, joy_count];
 
     public static float throttle;
     public static float yaw;
@@ -33,11 +36,9 @@ public class InputReader : MonoBehaviour
         "Roll",
         "Arm",
         "Fire" };
-    public static int?[,] axesInputs = new int?[axes_count, joy_count]; //инпут для каждой оси
-    public static bool[,] axesInverts = new bool[axes_count, joy_count]; //инверт для каждой оси, по умолчанию все выключены
 
 
-    private void Start()
+    private void Awake()
     {
         LoadFromFile();    
     }
@@ -50,14 +51,7 @@ public class InputReader : MonoBehaviour
 
     public static void ClearValues()
     {
-        for (int i = 0; i < axes_count; i++)
-        {
-            for (int j = 0; j < joy_count; j++)
-            {
-                axesInputs[i,j] = null;
-                axesInverts[i,j] = false;
-            }
-        }
+        inputParameters = new InputParameters();
         OnConfigChange?.Invoke(null, new EventArgs());
     }
     
@@ -65,7 +59,7 @@ public class InputReader : MonoBehaviour
     {
         for (int i = 0; i < axes_count; i++)
             for (int j = 0; j < joy_count; j++)
-                joy_axes[i, j] = Input.GetAxis($"j{j}a{i}");
+                axes_value_arr[i, j] = Input.GetAxis($"j{j}a{i}");
         throttle = GetInputValueFromAxis(0) ?? -1;
         yaw = GetInputValueFromAxis(1) ?? 0;
         pitch = GetInputValueFromAxis(2) ?? 0;
@@ -77,30 +71,72 @@ public class InputReader : MonoBehaviour
     private static float? GetInputValueFromAxis(int input_number)
     {
         float? input_value = null;
-        var ij = CoordinatesOf<int?>(axesInputs, input_number); //ищем номер оси, подходящий //TODO 1) это медленно 2) если забито несколько осей
-        if (ij.Item1 != -1 && axesInputs[ij.Item1, ij.Item2].HasValue) //если не нашлось     
+        var ij = CoordinatesOf<int?>(inputParameters.inputNum, input_number); //ищем номер оси, подходящий //TODO 1) это медленно 2) если забито несколько осей
+        int i = ij.Item1;
+        int j = ij.Item2;
+        if (i != -1 && inputParameters.inputNum[i, j].HasValue) //если нашлось и забито
         {
-            input_value = joy_axes[ij.Item1, ij.Item2];
-            if (axesInverts[ij.Item1, ij.Item2]) input_value = -input_value;
+            //исходное
+            float v = axes_value_arr[i, j];
+            //ограниченное            
+            float min = Mathf.Min(inputParameters.min[i, j], inputParameters.max[i, j]);
+            float max = Mathf.Max(inputParameters.min[i, j], inputParameters.max[i, j]);
+            float center = inputParameters.center[i, j];
+            float dz = inputParameters.deadZoneSize[i, j];
+            if (min < center && center < max) //если валидное состояние мин макс и центр
+                if (v <= min)
+                    input_value = -1;
+                else if (v < center - dz / 2)
+                {
+                    float A = 1 / (-min + center - dz / 2);
+                    float B = - (center - dz / 2) * A;
+                    input_value = A * v + B;
+                }
+                else if (v <= center + dz / 2)
+                    input_value = 0;
+                else if (v < max)
+                {
+                    float A = 1 / (max + center + dz / 2);
+                    float B = - (center + dz / 2) * A;
+                    input_value = A * v + B;
+                }
+                else  //v >=max
+                    input_value = 1;
+            else
+                input_value = 0;            
+            //инвертированное
+            if (inputParameters.inverts[i, j]) input_value = -input_value;
         }
         return input_value;
     }
 
 
-    // SAVE LOAD
-    [System.Serializable]
-    class InputParameters
-    {
-        public int?[,] mapping_axes_Array;
-        public bool[,] mapping_inverts_Array;
 
-        public InputParameters(int?[,] mapping_axes_Array, bool[,] mapping_inverts_Array)
+    [System.Serializable]
+    public class InputParameters
+    {
+        public string version = currentVersion;
+        public int?[,] inputNum = new int?[axes_count, joy_count]; //инпут для каждой оси
+        public bool[,] inverts = new bool[axes_count, joy_count];  //инверт для каждой оси, по умолчанию все выключены
+        public float[,] min = new float[axes_count, joy_count]; //мин  для каждой оси
+        public float[,] max = new float[axes_count, joy_count]; //макс для каждой оси
+        public float[,] center = new float[axes_count, joy_count]; //центральное положение
+        public float[,] deadZoneSize = new float[axes_count, joy_count]; //размер мертвой зоны
+
+        public InputParameters()
         {
-            this.mapping_axes_Array = mapping_axes_Array;
-            this.mapping_inverts_Array = mapping_inverts_Array;
+            for (int i = 0; i < axes_count; i++)
+                for (int j = 0; j < joy_count; j++)
+                {
+                    min[i, j] = -1;
+                    max[i, j] = 1;
+                    deadZoneSize[i, j] = 0.01f;
+                }
         }
     }
 
+
+    // SAVE LOAD
     public static void SaveToFile()
     {
         //string destination = Application.persistentDataPath + "/Bindings.dat";
@@ -113,9 +149,8 @@ public class InputReader : MonoBehaviour
         if (File.Exists(destination)) file = File.OpenWrite(destination);
         else file = File.Create(destination);
 
-        InputParameters data = new InputParameters(axesInputs, axesInverts);
         BinaryFormatter bf = new BinaryFormatter();
-        bf.Serialize(file, data);
+        bf.Serialize(file, inputParameters);
         file.Close();
         Debug.Log("Saved to " + destination);
     }
@@ -125,13 +160,12 @@ public class InputReader : MonoBehaviour
         string destination = System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)  + "/My Games/FPV Battle/Bindings.dat";
         Debug.Log("Loading from " + destination);
 
-
         FileStream file;
 
         if (File.Exists(destination)) file = File.OpenRead(destination);
         else
         {
-            Debug.LogError("File not found " + destination);
+            Debug.Log("Bindings file not found " + destination);
             return;
         }
 
@@ -139,9 +173,7 @@ public class InputReader : MonoBehaviour
         BinaryFormatter bf = new BinaryFormatter();
         try
         {
-            InputParameters data = (InputParameters)bf.Deserialize(file);
-            axesInputs = data.mapping_axes_Array;
-            axesInverts = data.mapping_inverts_Array;
+            inputParameters = (InputParameters)bf.Deserialize(file);
             OnConfigChange?.Invoke(null, new EventArgs());
         }
         catch
@@ -153,6 +185,12 @@ public class InputReader : MonoBehaviour
         if (!file_format_is_good)
         {
             Debug.LogError("Невернвый формат файла " + destination);
+            File.Delete(destination);
+            return;
+        }
+        if (!inputParameters.version.Equals(currentVersion))
+        {
+            Debug.LogError($"Версия файла различается {inputParameters.version} vs. {currentVersion} {destination}");
             File.Delete(destination);
             return;
         }
