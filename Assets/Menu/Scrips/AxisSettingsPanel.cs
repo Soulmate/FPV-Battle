@@ -123,7 +123,7 @@ public class AxisSettingsPanel : MonoBehaviour
             slider_center.maxValue = 1;
             dropdown.ClearOptions();
             dropdown.options.Add(new Dropdown.OptionData() { text = "none" });
-            foreach (string inputName in InputReader.input_names_list)
+            foreach (string inputName in JoystickInputReader.input_names_list)
                 dropdown.options.Add(new Dropdown.OptionData() { text = inputName });
         }
     }

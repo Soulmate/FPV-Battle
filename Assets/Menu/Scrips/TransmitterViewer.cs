@@ -30,7 +30,6 @@ public class TransmitterViewer : MonoBehaviour
             stickR.transform.localScale = 1.3f * Vector3.one;
         else
             stickR.transform.localScale = 1 * Vector3.one;
-
     }
 
     void Start()

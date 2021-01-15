@@ -9,9 +9,8 @@ public class Drone_phys_and_input : MonoBehaviour
     // Start is called before the first frame update
     public float drone_power = 45;
 
-    public float rcRate = 1;
-    public float expo = 0;
-    public float superRate = 0.7f;
+    public bool allowMovment = true;
+    public bool allowRotation = true;
 
     //todo убрать из паблика
     public Vector3 speed = new Vector3(0, 0, 0);
@@ -19,11 +18,9 @@ public class Drone_phys_and_input : MonoBehaviour
 
     public float phys_gravity_g = 9.8f;
     public float phys_drag_coeff = 0.3f;
-
-    Transform drone_cam_transform;
-
-
-    bool useMyPhys = true;    
+    
+    public bool useMyPhys = true;
+    private float? my_phys_turn_off_time = null;
     public float my_phys_turn_off_duration = 0.1f; //длительность отключения физики при ударе
 
     AudioSource audioSource;
@@ -63,34 +60,41 @@ public class Drone_phys_and_input : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (my_phys_turn_off_time.HasValue && Time.time > my_phys_turn_off_time + my_phys_turn_off_duration)
+            Turn_on_my_phys();
+
         if (useMyPhys)
         {
-            float thr = InputReader.throttle;
-            float yaw = InputReader.yaw;
-            float pit = InputReader.pitch;
-            float rol = InputReader.roll;
+            float thr = JoystickInputReader.throttle;
+            float yaw = JoystickInputReader.yaw;
+            float pit = JoystickInputReader.pitch;
+            float rol = JoystickInputReader.roll;
             bool arm = true;//todo InputReader.arm;//InputReader.arm;
 
-            transform.Rotate(new Vector3( // управление ориентацией дрона
-                    bfcalc(pit, rcRate, expo, superRate) * Time.fixedDeltaTime,
-                    bfcalc(yaw, rcRate, expo, superRate) * Time.fixedDeltaTime,
-                    bfcalc(-rol, rcRate, expo, superRate) * Time.fixedDeltaTime));
+            // управление ориентацией дрона
+            if (allowRotation)
+            {
+                DroneRates.AxisValues ang_vel = DroneRates.GetAngularVelocities(new DroneRates.AxisValues(rol, pit, yaw));
+                transform.Rotate(Time.fixedDeltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll)));                
+                //rb.MoveRotation(transform.rotation * Quaternion.Euler(Time.fixedDeltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll))));
 
-            float force = (thr + 1f) / 2f * drone_power;
 
-            Vector3 acc_gravity = new Vector3(0, -phys_gravity_g, 0);
-            Vector3 acc_throtle;
-            if (arm)
-                acc_throtle = transform.up * force;
-            else
-                acc_throtle = Vector3.zero;
-            Vector3 acc_drag = -speed * phys_drag_coeff;
-            accsel = acc_gravity + acc_throtle + acc_drag;
-
-            speed = speed + accsel * Time.fixedDeltaTime;
-
-            transform.Translate(speed * Time.fixedDeltaTime, Space.World);
-            //GetComponent<ConstantForce>().relativeForce = new Vector3(0, force, 0);
+            }
+            if (allowMovment)
+            {
+                float force = (thr + 1f) / 2f * drone_power;
+                Vector3 acc_gravity = new Vector3(0, -phys_gravity_g, 0);
+                Vector3 acc_throtle;
+                if (arm)
+                    acc_throtle = transform.up * force;
+                else
+                    acc_throtle = Vector3.zero;
+                Vector3 acc_drag = -speed * phys_drag_coeff;
+                accsel = acc_gravity + acc_throtle + acc_drag;
+                speed = speed + accsel * Time.fixedDeltaTime;
+                transform.Translate(speed * Time.fixedDeltaTime, Space.World);
+                //rb.MovePosition(transform.position + speed * Time.fixedDeltaTime);
+            }
         }
         else
             print("физика отключена");
@@ -98,11 +102,15 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.Space))
             ResetDrone();
+        if (Input.GetKeyDown(KeyCode.F4))
+            allowMovment = !allowMovment;
+        if (Input.GetKeyDown(KeyCode.F3))
+            allowRotation = !allowRotation;
 
-        float thr = InputReader.throttle;
-        bool fire = InputReader.fire;//InputReader.arm;
+        float thr = JoystickInputReader.throttle;
+        bool fire = JoystickInputReader.fire;//InputReader.arm;
 
         //audio:
         audioSource.pitch = (thr + 1) * 0.5f * 0.5f + 0.5f;
@@ -124,6 +132,9 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        //step back
+        //rb.MovePosition(transform.position - speed * 5 * Time.fixedDeltaTime);
+
         Turn_off_my_phys(); //выключить мою физику на время
 
 
@@ -143,17 +154,17 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void Turn_off_my_phys()        //выключить мою физику временно
     {
-        //step back? 
-        //transform.Translate(-speed * Time.fixedDeltaTime, Space.World);
-        useMyPhys = false;        
+        //speed = Vector3.zero;
+        useMyPhys = false;
         rb.isKinematic = false;
-        Invoke("Turn_on_my_phys", my_phys_turn_off_duration);
+        my_phys_turn_off_time = Time.time;        
     }
 
     void Turn_on_my_phys()        //выключить мою физику временно
     {
-        useMyPhys = true;        
+        useMyPhys = true;
         rb.isKinematic = true;
+        my_phys_turn_off_time = null;
     }
 
 
