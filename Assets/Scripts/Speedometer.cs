@@ -14,9 +14,9 @@ public class Speedometer : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        speed = (transform.position - prevPosition) / Time.deltaTime;
+        speed = (transform.position - prevPosition) / Time.fixedDeltaTime;
         prevPosition = transform.position;
     }
 }

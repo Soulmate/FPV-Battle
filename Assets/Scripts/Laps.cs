@@ -26,13 +26,13 @@ public class Laps : MonoBehaviour
         foreach (Transform child in transform.Find("Checkpoints"))
             if (child.gameObject.activeSelf)
             {
-                print(child.name + "active");
+               // print(child.name + "active");
                 checkPointArray.Add(child.transform);
             }
         else
-                print(child.name + "inactive");
+               // print(child.name + "inactive");
 
-        print(checkPointArray);
+        //print(checkPointArray);
 
         if (checkPointArray.Count == 0)
             Debug.LogError("No checkpoints");

@@ -18,17 +18,17 @@ public class Drone_phys_and_input : MonoBehaviour
 
     public float phys_gravity_g = 9.8f;
     public float phys_drag_coeff = 0.3f;
-    
+
     public bool useMyPhys = true;
-    private float? my_phys_turn_off_time = null;
-    public float my_phys_turn_off_duration = 0.1f; //длительность отключения физики при ударе
+    //private float? my_phys_turn_off_time = null;
+    public float my_phys_turn_off_duration = 0.2f; //длительность отключения физики при ударе
 
     AudioSource audioSource;
 
     public bool fight_started = true;
 
     Rigidbody rb;
-
+    //public float maxAngularVelocity = 3.14f/180 * 1000; //максимальная угловая скорость рад/с при которой управляется коптер. Если она больше, то ждем пока уменьшится драгом
 
     void Start()
     {
@@ -60,34 +60,31 @@ public class Drone_phys_and_input : MonoBehaviour
 
     private void FixedUpdate()
     {
-        
-    }
-
-    void Update()
-    {
         float thr = JoystickInputReader.throttle;
         float yaw = JoystickInputReader.yaw;
         float pit = JoystickInputReader.pitch;
         float rol = JoystickInputReader.roll;
-        bool arm = true;//todo InputReader.arm;//InputReader.arm;
-        bool fire = JoystickInputReader.fire;//InputReader.arm;
+        bool arm = true;//todo InputReader.arm;//InputReader.arm;        
 
-        if (my_phys_turn_off_time.HasValue && Time.time > my_phys_turn_off_time + my_phys_turn_off_duration)
-            Turn_on_my_phys();
+        /*if (my_phys_turn_off_time.HasValue && Time.time > my_phys_turn_off_time + my_phys_turn_off_duration)
+            Turn_on_my_phys();*/
+
+
+
+
+        // управление ориентацией дрона
+        if (allowRotation)// && rb.angularVelocity.magnitude < maxAngularVelocity)
+        {
+            DroneRates.AxisValues ang_vel = DroneRates.GetAngularVelocities(new DroneRates.AxisValues(rol, pit, yaw));
+            transform.Rotate(Time.deltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll)));
+            //rb.MoveRotation(transform.rotation * Quaternion.Euler(Time.fixedDeltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll))));
+
+
+        }
 
         if (useMyPhys)
         {
-            
 
-            // управление ориентацией дрона
-            if (allowRotation)
-            {
-                DroneRates.AxisValues ang_vel = DroneRates.GetAngularVelocities(new DroneRates.AxisValues(rol, pit, yaw));
-                transform.Rotate(Time.deltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll)));
-                //rb.MoveRotation(transform.rotation * Quaternion.Euler(Time.fixedDeltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll))));
-
-
-            }
             if (allowMovment)
             {
                 float force = (thr + 1f) / 2f * drone_power;
@@ -104,32 +101,24 @@ public class Drone_phys_and_input : MonoBehaviour
                 //rb.MovePosition(transform.position + speed * Time.fixedDeltaTime);
             }
         }
-        else
-            print("физика отключена");
+        //else
+        //    print("физика отключена");
+    }
 
-
-
-
-
+    void Update()
+    {
         if (Input.GetKeyDown(KeyCode.Space))
             ResetDrone();
         if (Input.GetKeyDown(KeyCode.F4))
             allowMovment = !allowMovment;
         if (Input.GetKeyDown(KeyCode.F3))
             allowRotation = !allowRotation;
-
-        //float thr = JoystickInputReader.throttle;
-        
-
+       
         //audio:
-        audioSource.pitch = (thr + 1) * 0.5f * 0.5f + 0.5f;
-        audioSource.volume = (thr + 1) * 0.5f * 0.8f + 0.2f;
+        audioSource.pitch = (JoystickInputReader.throttle + 1) * 0.5f * 0.5f + 0.5f;
+        audioSource.volume = (JoystickInputReader.throttle + 1) * 0.5f * 0.8f + 0.2f;
 
-        if (fire)
-        {
-            print("fireing");
-            GetComponentInChildren<ProjectileShooter>().Shoot();
-        }
+
     }
 
     void ResetDrone()
@@ -139,41 +128,40 @@ public class Drone_phys_and_input : MonoBehaviour
         speed = Vector3.zero;
     }
 
-    void OnCollisionEnter(Collision collision)
-    {
-        //step back
-        //rb.MovePosition(transform.position - speed * 5 * Time.fixedDeltaTime);
-        
+
+    private void OnCollisionEnter(Collision collision)
+    {        
         Turn_off_my_phys(); //выключить мою физику на время
-
-
-        foreach (ContactPoint contact in collision.contacts)
-        {
-            Debug.DrawRay(contact.point, contact.normal, Color.white);
-        }
-        if (collision.relativeVelocity.magnitude > 2)
-        {
-            print("БАМ");//audioSource.Play();
-        }
-        else
-            print("бум");//audioSource.Play();
-        //ResetDrone();*/
+        speed = collision.GetContact(0).normal; //скорость когда включится физика
+        Invoke("Turn_on_my_phys", my_phys_turn_off_duration); //на случай, если коллайдер удалится (ракета) и выхода из него не будет
     }
+    
+    private void OnCollisionExit(Collision collision)
+    {        
+        //Invoke("Turn_on_my_phys", my_phys_turn_off_duration);
+        Turn_on_my_phys();
+    }
+
 
 
     void Turn_off_my_phys()        //выключить мою физику временно
     {
-        speed = Vector3.zero;
+        //speed = Vector3.zero;
+        //rb.velocity = speed;
         useMyPhys = false;
-        rb.isKinematic = false;
-        my_phys_turn_off_time = Time.time;        
+        //rb.useGravity= true;
+        //rb.isKinematic = false;
+        //my_phys_turn_off_time = Time.time;        
     }
 
     void Turn_on_my_phys()        //выключить мою физику временно
     {
+        //speed = rb.velocity;
+        //speed = Vector3.zero;
         useMyPhys = true;
-        rb.isKinematic = true;
-        my_phys_turn_off_time = null;
+        //rb.useGravity = false;
+        //rb.isKinematic = true;
+        //my_phys_turn_off_time = null;
     }
 
 
