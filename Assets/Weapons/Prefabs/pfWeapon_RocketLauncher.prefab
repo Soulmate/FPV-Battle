@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 307917414}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0000000048157, y: 0.0000000088855, z: 2.25}
+  m_LocalPosition: {x: -0.0000000048157, y: -0, z: 4.65}
   m_LocalScale: {x: 1.00217, y: 1.00217, z: 1.00217}
   m_Children: []
   m_Father: {fileID: 6668777420467596221}
@@ -171,9 +171,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6668777420467596221}
-  - component: {fileID: 6668777420467596222}
   - component: {fileID: 2393039074506667872}
-  - component: {fileID: 434401170}
+  - component: {fileID: 6668777420467596222}
   m_Layer: 0
   m_Name: pfWeapon_RocketLauncher
   m_TagString: Untagged
@@ -190,29 +189,13 @@ Transform:
   m_GameObject: {fileID: 6668777420467596160}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.00000001587, y: -0.00000003174, z: -4.372}
-  m_LocalScale: {x: 0.22381902, y: 0.22381902, z: 0.22381902}
+  m_LocalScale: {x: 0.19144, y: 0.19144002, z: 0.19144002}
   m_Children:
   - {fileID: 6668777419688841932}
   - {fileID: 307917415}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6668777420467596222
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6668777420467596160}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a80b4a6bdb01d74bac961abd6c6ebaf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pfProjectile: {fileID: 1907693392588628364, guid: 6feeff46443ba2d47b89f20473777071, type: 3}
-  target: {fileID: 0}
-  throwOutSpeed: 0
-  projectileContainer: {fileID: 0}
 --- !u!114 &2393039074506667872
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -226,7 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: {x: 0, y: 0, z: 0}
---- !u!114 &434401170
+--- !u!114 &6668777420467596222
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -235,11 +218,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 6668777420467596160}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a1846006c9ccad749a3509fdc9501a31, type: 3}
+  m_Script: {fileID: 11500000, guid: 2a80b4a6bdb01d74bac961abd6c6ebaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponType: 0
+  ammoClipSize: 2
+  ammoCount: 2
   shootPerSecond: 2
-  isShooting: 0
-  ps: {fileID: 6668777420467596222}
-  armed: 0
-  autoshoot: 0
+  triggerPressed: 0
+  pfProjectile: {fileID: 1907693392588628364, guid: 6feeff46443ba2d47b89f20473777071, type: 3}
+  target: {fileID: 0}
+  throwOutSpeed: 20
+  projectileContainer: {fileID: 0}

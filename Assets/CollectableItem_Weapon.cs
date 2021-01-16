@@ -11,7 +11,7 @@ public class CollectableItem_Weapon : MonoBehaviour
     {
         print(weaponType);
         //любому, кто наткнется и кому можно сменить оружие, он его сменит
-        WeaponSelector weaponSelector = collider.transform.GetComponentInChildren<WeaponSelector>();
+        WeaponsController weaponSelector = collider.transform.GetComponentInChildren<WeaponsController>();
         if (weaponSelector != null)
         {
             weaponSelector.SelectWeapon(weaponType);

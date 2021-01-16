@@ -92,9 +92,6 @@ GameObject:
   - component: {fileID: 7855708665230369476}
   - component: {fileID: 7855708665230369499}
   - component: {fileID: 7855708665230369497}
-  - component: {fileID: 7855708665230369498}
-  - component: {fileID: 7855708665230369477}
-  - component: {fileID: 7855708665230369478}
   m_Layer: 0
   m_Name: pfMachineGun
   m_TagString: Untagged
@@ -111,7 +108,7 @@ Transform:
   m_GameObject: {fileID: 7855708665230369496}
   m_LocalRotation: {x: -0.14138494, y: 0, z: 0, w: 0.9899547}
   m_LocalPosition: {x: 28.1, y: -4.862144, z: -50.50827}
-  m_LocalScale: {x: 0.22769, y: 0.22769, z: 0.22769}
+  m_LocalScale: {x: 0.12701, y: 0.12701, z: 0.12701}
   m_Children:
   - {fileID: 7855708665434989054}
   - {fileID: 7855708664646047867}
@@ -143,51 +140,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a80b4a6bdb01d74bac961abd6c6ebaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponType: 1
+  ammoClipSize: 10
+  ammoCount: 10
+  autoFire: 1
+  shootPerSecond: 10
+  triggerPressed: 0
   pfProjectile: {fileID: 8102615802921685302, guid: b94f30b4550fd0d43a503e7880a4892d, type: 3}
   target: {fileID: 0}
   throwOutSpeed: 100
   projectileContainer: {fileID: 0}
---- !u!114 &7855708665230369498
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7855708665230369496}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a1846006c9ccad749a3509fdc9501a31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  shootPerSecond: 10
-  isShooting: 0
-  ps: {fileID: 7855708665230369497}
-  armed: 1
-  autoshoot: 0
---- !u!114 &7855708665230369477
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7855708665230369496}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 532b4907988643d4f80cc1cbc7e81fc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &7855708665230369478
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7855708665230369496}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9312b007e97b8084cb59865b2b5ab121, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7855708665434989053
 GameObject:
   m_ObjectHideFlags: 0

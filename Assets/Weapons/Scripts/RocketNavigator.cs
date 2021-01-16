@@ -21,6 +21,8 @@ public class RocketNavigator : MonoBehaviour
     private bool engine_is_on = true;
     Rigidbody rb;
 
+    AudioSource audioSource;
+    public AudioSource sExplosion;
 
     void Start()
     {
@@ -34,6 +36,8 @@ public class RocketNavigator : MonoBehaviour
             var weapon_collider = weapon.GetComponent<Collider>();
             Physics.IgnoreCollision(this_collider, weapon_collider);
         }
+
+        audioSource = GetComponent<AudioSource>();        
     }
 
     // Update is called once per frame
@@ -74,9 +78,11 @@ public class RocketNavigator : MonoBehaviour
 
 
     private void Kill() 
-    {        
+    {
+        audioSource?.Stop();
         ParticleSystem ps = GetComponentInChildren<ParticleSystem>();
         ps.Play();
+        sExplosion?.Play();
         GetComponentInChildren<TrailRenderer>().enabled = false;
         GetComponentInChildren<BoxCollider>().enabled = false;
         transform.Find("Model").gameObject.SetActive(false);
@@ -90,6 +96,7 @@ public class RocketNavigator : MonoBehaviour
         rb.drag = dragAfterDeath;
         rb.AddTorque(new Vector3(Random.Range(-100,100), Random.Range(-100, 100), Random.Range(-100, 100)));
         engine_is_on = false;
+        audioSource?.Stop();
     }
 
     void Destroy()
