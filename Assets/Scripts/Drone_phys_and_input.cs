@@ -60,22 +60,30 @@ public class Drone_phys_and_input : MonoBehaviour
 
     private void FixedUpdate()
     {
+        
+    }
+
+    void Update()
+    {
+        float thr = JoystickInputReader.throttle;
+        float yaw = JoystickInputReader.yaw;
+        float pit = JoystickInputReader.pitch;
+        float rol = JoystickInputReader.roll;
+        bool arm = true;//todo InputReader.arm;//InputReader.arm;
+        bool fire = JoystickInputReader.fire;//InputReader.arm;
+
         if (my_phys_turn_off_time.HasValue && Time.time > my_phys_turn_off_time + my_phys_turn_off_duration)
             Turn_on_my_phys();
 
         if (useMyPhys)
         {
-            float thr = JoystickInputReader.throttle;
-            float yaw = JoystickInputReader.yaw;
-            float pit = JoystickInputReader.pitch;
-            float rol = JoystickInputReader.roll;
-            bool arm = true;//todo InputReader.arm;//InputReader.arm;
+            
 
             // управление ориентацией дрона
             if (allowRotation)
             {
                 DroneRates.AxisValues ang_vel = DroneRates.GetAngularVelocities(new DroneRates.AxisValues(rol, pit, yaw));
-                transform.Rotate(Time.fixedDeltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll)));                
+                transform.Rotate(Time.deltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll)));
                 //rb.MoveRotation(transform.rotation * Quaternion.Euler(Time.fixedDeltaTime * (new Vector3(ang_vel.pitch, ang_vel.yaw, -ang_vel.roll))));
 
 
@@ -91,17 +99,18 @@ public class Drone_phys_and_input : MonoBehaviour
                     acc_throtle = Vector3.zero;
                 Vector3 acc_drag = -speed * phys_drag_coeff;
                 accsel = acc_gravity + acc_throtle + acc_drag;
-                speed = speed + accsel * Time.fixedDeltaTime;
-                transform.Translate(speed * Time.fixedDeltaTime, Space.World);
+                speed = speed + accsel * Time.deltaTime;
+                transform.Translate(speed * Time.deltaTime, Space.World);
                 //rb.MovePosition(transform.position + speed * Time.fixedDeltaTime);
             }
         }
         else
             print("физика отключена");
-    }
 
-    void Update()
-    {
+
+
+
+
         if (Input.GetKeyDown(KeyCode.Space))
             ResetDrone();
         if (Input.GetKeyDown(KeyCode.F4))
@@ -109,8 +118,8 @@ public class Drone_phys_and_input : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F3))
             allowRotation = !allowRotation;
 
-        float thr = JoystickInputReader.throttle;
-        bool fire = JoystickInputReader.fire;//InputReader.arm;
+        //float thr = JoystickInputReader.throttle;
+        
 
         //audio:
         audioSource.pitch = (thr + 1) * 0.5f * 0.5f + 0.5f;
@@ -134,7 +143,7 @@ public class Drone_phys_and_input : MonoBehaviour
     {
         //step back
         //rb.MovePosition(transform.position - speed * 5 * Time.fixedDeltaTime);
-
+        
         Turn_off_my_phys(); //выключить мою физику на время
 
 
@@ -154,7 +163,7 @@ public class Drone_phys_and_input : MonoBehaviour
 
     void Turn_off_my_phys()        //выключить мою физику временно
     {
-        //speed = Vector3.zero;
+        speed = Vector3.zero;
         useMyPhys = false;
         rb.isKinematic = false;
         my_phys_turn_off_time = Time.time;        
