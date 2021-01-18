@@ -1400,9 +1400,9 @@ RectTransform:
   m_Father: {fileID: 1434721863}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -101, y: 214}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 464, y: -151}
   m_SizeDelta: {x: 80, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &217106251
@@ -3269,11 +3269,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1846006c9ccad749a3509fdc9501a31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shootPerSecond: 2
-  isShooting: 0
-  ps: {fileID: 0}
-  armed: 1
-  autoshoot: 0
 --- !u!1 &606338041
 GameObject:
   m_ObjectHideFlags: 0
@@ -5207,6 +5202,10 @@ PrefabInstance:
     - target: {fileID: 4093816709332727079, guid: c6f2b133ca1f1f745a0488c5549c6bc3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5702155773891847447, guid: c6f2b133ca1f1f745a0488c5549c6bc3, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6275443108435400212, guid: c6f2b133ca1f1f745a0488c5549c6bc3, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -10619,6 +10618,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectedWeapon: {fileID: 0}
+  sSwitch: {fileID: 1516034588}
 --- !u!1 &2003418961
 GameObject:
   m_ObjectHideFlags: 0

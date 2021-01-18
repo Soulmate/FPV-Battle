@@ -21,7 +21,8 @@ public class WeaponsController : MonoBehaviour
         var weapon = weapons.Find((w) => w.weaponType == weaponSelected);
         weapon.gameObject.SetActive(true);
         selectedWeapon = weapon;
-        sSwitch?.Play();
+        selectedWeapon.Reload();
+        sSwitch?.Play();        
     }
 
     private void Update()
@@ -34,7 +35,7 @@ public class WeaponsController : MonoBehaviour
             //перезаряжаемся если перевернулись
             if (
                 selectedWeapon.ammoCount == 0 && // перезаряжаем только пустую обойму
-                Vector3.Angle(transform.up, -Vector3.up) < 30 //upside down 
+                Vector3.Angle(transform.up, -Vector3.up) < 60 //upside down 
                 )
                 selectedWeapon.Reload();
         }

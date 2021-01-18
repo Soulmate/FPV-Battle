@@ -13,8 +13,10 @@ public class AttachToCamera : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-      
-            transform.position = SceneView.lastActiveSceneView.camera.transform.position;
+#if DEBUG 
+
+        transform.position = SceneView.lastActiveSceneView.camera.transform.position;
             transform.rotation = SceneView.lastActiveSceneView.camera.transform.rotation;
+#endif
     }
 }
